@@ -16,26 +16,32 @@
 # 71 participants were Increasing, 
 # 47 were Decreasing, 
 # 19 were Constant, and 51 were Mixed. 
-
+import pylab
+pylab.ion()
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy as sp
 import scipy.io 
 
+#reading data section
 data0 = scipy.io.loadmat('IncreaseDecreaseTendency.mat')
 data1 = scipy.io.loadmat('InDeConTendency.mat')
+report_thres = scipy.io.loadmat('summarydatacollect.mat')['summarysrchncollect']
+report_thres = report_thres[:, ([0]+range(2,8))]
+
+
+
+##assigning variables:
 subj_id = data1['subjectID']
 constant = data0['constant']
 increase = data0['increase']
 decrease = data0['decrease']
 
-df = np.concatenate((subj_id, constant,increase,decrease), axis = 1)
 
-df = pd.DataFrame(df)
-df.columns = ['subj_id', 'constant', 'increase','decrease']
-df.set_index('subj_id', inplace =True)
 
+
+##decide which class for each subj is in for the reported threshold
 def  match(row):
 	if sum(row == 0) ==2:
 		return row.loc[row != 0].index[0]
@@ -46,18 +52,41 @@ def  match(row):
 		elif intermediate_result == 'decrease':
 			return 'increase'
 		else:
-			print 'welll'
+			print 'well, it has both increase and decrease, so it is a mix'
 			return 'mix'
 	elif sum(row == 0 ) == 0:
 		return 'mix'
-df.loc[:, 'class'] = df.apply(match, axis = 1)
 
-class_df = df.groupby('class').agg('count')
+
+#classifying each subj into the four reported threshold classes
+df = np.concatenate((subj_id, constant,increase,decrease), axis = 1)
+df = pd.DataFrame(df)
+df.columns = ['subj_id', 'constant', 'increase','decrease']
+df.set_index('subj_id', inplace =True)
+df.loc[:, 'class'] = df.apply(match, axis = 1)
+#class_df = df.groupby('class').agg('count')
 #class_df.to_csv('class_df.csv', index = True)
 
 
+##combine with the reported threshold of each subj,
+report_thres = pd.DataFrame(report_thres)
+report_thres.columns = ['subj_id','repo_thres1','repo_thres2','repo_thres3','repo_thres4','repo_thres5','repo_thres6']
+report_thres.set_index('subj_id', inplace = True)
+df = pd.concat([df, report_thres],axis = 1)
+
+##1)get the reported threshold for each category
+df_class = df.loc[:,['class','repo_thres1','repo_thres2','repo_thres3','repo_thres4','repo_thres5','repo_thres6']].groupby('class').apply(np.mean).reset_index(inplace=False)
+df_class = pd.melt(df_class, id_vars=['class'], value_vars=['repo_thres1','repo_thres2','repo_thres3','repo_thres4','repo_thres5','repo_thres6']).pivot(index = 'variable', columns = 'class',values='value')
+df_class.index.name = 'thres'
+df_class.columns.name = None
+df_class.loc[:,'turns'] = [2, 5, 9, 13, 17, 20]
+df_class.plot(x ='turns', y =['constant','increase','decrease','mix'])
+plt.ylabel('Card Values')
+plt.xlabel('Turn')
+plt.axis([1,20,0,100])
+plt.title('Reported thresholds for each of 4 groups')
 
 
 
-
+##??5)(Maybe you can also show all of the individual threshold lines for each subject in each of the four categories, too, so we can see how well the mean captures all the individual thresholds....) 
 
