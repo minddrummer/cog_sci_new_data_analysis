@@ -1,7 +1,7 @@
 '''
 #to-do-list:
 1)get the reported threshold for each category
-??5)(Maybe you can also show all of the individual threshold lines for each subject in each of the four categories, too, so we can see how well the mean captures all the individual thresholds....) 
+5)(Maybe you can also show all of the individual threshold lines for each subject in each of the four categories, too, so we can see how well the mean captures all the individual thresholds....) 
 2)get modelB threshold for each category:mean/median
 3)get the # of subjects best fitting for each type of model
 4)get the # of subjects besting fitting in each of the 4 category for each type of model
@@ -86,7 +86,41 @@ plt.xlabel('Turn')
 plt.axis([1,20,0,100])
 plt.title('Reported thresholds for each of 4 groups')
 
+##5)(Maybe you can also show all of the individual threshold lines for each subject in each of the four categories, too, so we can see how well the mean captures all the individual thresholds....) 
+df_thres_groupby = df.loc[:,['class','repo_thres1','repo_thres2','repo_thres3','repo_thres4','repo_thres5','repo_thres6']].groupby('class')
+type_lst = ['constant','increase','decrease','mix']
+
+for class_name in type_lst:
+	#class_name = 'constant'
+	tempt_df = pd.melt(df_thres_groupby.get_group(class_name).reset_index(inplace=False), id_vars = 'subj_id',\
+	value_vars=['repo_thres1','repo_thres2','repo_thres3','repo_thres4','repo_thres5','repo_thres6']).\
+	pivot(index = 'variable', columns = 'subj_id',values='value')
+	tempt_df.loc[:,'turns'] = [2, 5, 9, 13, 17, 20]
+	ax = tempt_df.plot(x='turns', y = tempt_df.columns[0:-1], legend = False)
+	title = 'Plot the mean of reported threshold for ' + class_name + ' group and also the invididual thresholds'
+	df_class.plot(x ='turns', y =class_name, ax = ax, title = title,xlim=[1,20],ylim=[0,100],  ls='-', lw =4.0, marker = 'o', color='k',legend = False)
+	# L=plt.legend()
+	# L.get_texts()[0].set_text(None)
 
 
-##??5)(Maybe you can also show all of the individual threshold lines for each subject in each of the four categories, too, so we can see how well the mean captures all the individual thresholds....) 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
