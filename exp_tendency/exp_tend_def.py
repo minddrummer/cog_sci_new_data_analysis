@@ -29,7 +29,19 @@ data0 = scipy.io.loadmat('IncreaseDecreaseTendency.mat')
 data1 = scipy.io.loadmat('InDeConTendency.mat')
 report_thres = scipy.io.loadmat('summarydatacollect.mat')['summarysrchncollect']
 report_thres = report_thres[:, ([0]+range(2,8))]
+modelb = pd.DataFrame(scipy.io.loadmat('Parameter7_ModelB_ModelingResult_Bounded_191Subjects.mat')['data'])
+modelb.columns = ['subj_id', 'LL_total', 'thres1','thres2','thres3','thres4','thres5','thres6','scaling']
+epi_greedy = pd.DataFrame(scipy.io.loadmat('epsilon_greedy_model_results.mat')['LL_total'], columns = ['epi_greedy'])
+fix = pd.DataFrame(scipy.io.loadmat('fixed_thresh_model_results.mat')['LL_Total'], columns = ['fix'])
+jump_7 = pd.DataFrame(scipy.io.loadmat('jumpturn_7_two_thres_model_bounded_fitting_result.mat')['minLL'], columns = ['jump_7'])
+jump = pd.DataFrame(scipy.io.loadmat('jumpturn_two_thres_model_bounded_fitting_result.mat')['minLL'], columns = ['jump'])
+k_step = pd.DataFrame(scipy.io.loadmat('k_step_model_results.mat')['minLL'], columns = ['k_step'])
+random_k = pd.DataFrame(scipy.io.loadmat('random_k_step_model_results.mat')['LL_total'], columns = ['random_k'])
+secretary = pd.DataFrame(scipy.io.loadmat('secretary_search_model_results.mat')['minLL'], columns = ['secretary'])
+successive = pd.DataFrame(scipy.io.loadmat('successive_non_candidate_count_model_results.mat')['minLL'], columns = ['successive'])
 
+#concatenate all the model results into one df named 'model'
+model = pd.concat([modelb, epi_greedy,fix,jump_7,jump,k_step,random_k,secretary,successive],axis=1)
 
 
 ##assigning variables:
@@ -101,15 +113,19 @@ for class_name in type_lst:
 	df_class.plot(x ='turns', y =class_name, ax = ax, title = title,xlim=[1,20],ylim=[0,100],  ls='-', lw =4.0, marker = 'o', color='k',legend = False)
 	# L=plt.legend()
 	# L.get_texts()[0].set_text(None)
+plt.close()
+plt.close()
+plt.close()
+plt.close()
+plt.close()
+plt.close()
 
 
+##2)get modelB threshold for each category:mean/median
 
-
-
-
-
-
-
+#combine df and model
+df.reset_index(inplace =True)
+final = pd.merge(df,model, on = 'subj_id', how = 'left')
 
 
 
