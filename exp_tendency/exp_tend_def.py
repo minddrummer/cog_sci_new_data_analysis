@@ -176,7 +176,7 @@ final_model.set_index('subj_id', inplace = True)
 final_model.loc[:,'best_model'] = final_model.apply(np.argmin, axis = 1)
 final_model.loc[:,'best_BIC'] = final_model.apply(np.min, axis = 1)
 print final_model.loc[:,'best_model'].value_counts()
-
+final_model.loc[:,'best_model'].value_counts().to_csv('total_best_model_each_subj.csv')
 
 ##4)get the # of subjects besting fitting in each of the 4 category for each type of model
 ###----the difference between final_model and final_model_class is that the later has 'class' for grouping and analyzing on each group level
@@ -188,4 +188,5 @@ final_model_class_gp = dict(list(final_model_class.groupby('class')))
 for each_class in final_model_class_gp:
 	print each_class.upper()
 	print final_model_class_gp[each_class].set_index('class',inplace=False).apply(np.argmin, axis=1).value_counts()
-
+	file_name = each_class+'.csv'
+	final_model_class_gp[each_class].set_index('class',inplace=False).apply(np.argmin, axis=1).value_counts().to_csv(file_name,index=True)
