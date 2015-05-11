@@ -24,6 +24,7 @@ import matplotlib.pyplot as plt
 import scipy as sp
 import scipy.io 
 
+
 #reading data section
 data0 = scipy.io.loadmat('IncreaseDecreaseTendency.mat')
 data1 = scipy.io.loadmat('InDeConTendency.mat')
@@ -31,14 +32,32 @@ report_thres = scipy.io.loadmat('summarydatacollect.mat')['summarysrchncollect']
 report_thres = report_thres[:, ([0]+range(2,8))]
 modelb = pd.DataFrame(scipy.io.loadmat('Parameter7_ModelB_ModelingResult_Bounded_191Subjects.mat')['data'])
 modelb.columns = ['subj_id', 'LL_total', 'thres1','thres2','thres3','thres4','thres5','thres6','scaling']
+#transfer to BIC value, modelB has 7 paras
+modelb.loc[:, 'modelB'] = modelb.loc[:,'LL_total'] + np.log(570)*7
 epi_greedy = pd.DataFrame(scipy.io.loadmat('epsilon_greedy_model_results.mat')['LL_total'], columns = ['epi_greedy'])
+#epi_greedy has 1 para
+epi_greedy = epi_greedy + np.log(570)*1
 fix = pd.DataFrame(scipy.io.loadmat('fixed_thresh_model_results.mat')['LL_Total'], columns = ['fix'])
+#fix has 2 paras
+fix = fix + np.log(570)*2
 jump_7 = pd.DataFrame(scipy.io.loadmat('jumpturn_7_two_thres_model_bounded_fitting_result.mat')['minLL'], columns = ['jump_7'])
+#jump_7 has 3 paras
+jump_7 = jump_7 + np.log(570)*3
 jump = pd.DataFrame(scipy.io.loadmat('jumpturn_two_thres_model_bounded_fitting_result.mat')['minLL'], columns = ['jump'])
+#jump has 4 paras
+jump = jump + np.log(570)*4
 k_step = pd.DataFrame(scipy.io.loadmat('k_step_model_results.mat')['minLL'], columns = ['k_step'])
+#k_step has 2 paras
+k_step = k_step + np.log(570)*2
 random_k = pd.DataFrame(scipy.io.loadmat('random_k_step_model_results.mat')['LL_total'], columns = ['random_k'])
+#random_k has 1 para
+random_k = random_k + np.log(570)*1
 secretary = pd.DataFrame(scipy.io.loadmat('secretary_search_model_results.mat')['minLL'], columns = ['secretary'])
+#secretary has 2 paras
+secretary = secretary + np.log(570)*2
 successive = pd.DataFrame(scipy.io.loadmat('successive_non_candidate_count_model_results.mat')['minLL'], columns = ['successive'])
+#successive has 2 paras
+successive = successive + np.log(570)*2
 
 #concatenate all the model results into one df named 'model'
 model = pd.concat([modelb, epi_greedy,fix,jump_7,jump,k_step,random_k,secretary,successive],axis=1)
@@ -143,5 +162,30 @@ for class_name in type_lst:
 	L=plt.legend()
 	L.get_texts()[0].set_text('Reported')
 	L.get_texts()[1].set_text('Model B')
+plt.close()
+plt.close()
+plt.close()
+plt.close()
 
+
+
+##3)get the # of subjects best fitting for each type of model
+final_model = final.loc[:,['subj_id', 'modelB', \
+u'epi_greedy', u'fix', u'jump_7', u'jump', u'k_step', u'random_k', u'secretary', u'successive']].copy()
+final_model.set_index('subj_id', inplace = True)
+final_model.loc[:,'best_model'] = final_model.apply(np.argmin, axis = 1)
+final_model.loc[:,'best_BIC'] = final_model.apply(np.min, axis = 1)
+print final_model.loc[:,'best_model'].value_counts()
+
+
+##4)get the # of subjects besting fitting in each of the 4 category for each type of model
+###----the difference between final_model and final_model_class is that the later has 'class' for grouping and analyzing on each group level
+final_model_class = final.loc[:,['subj_id', 'class', 'modelB', \
+u'epi_greedy', u'fix', u'jump_7', u'jump', u'k_step', u'random_k', u'secretary', u'successive']].copy()
+final_model_class.set_index('subj_id', inplace = True)
+final_model_class_gp = dict(list(final_model_class.groupby('class')))
+
+for each_class in final_model_class_gp:
+	print each_class.upper()
+	print final_model_class_gp[each_class].set_index('class',inplace=False).apply(np.argmin, axis=1).value_counts()
 
