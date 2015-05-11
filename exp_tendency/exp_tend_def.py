@@ -127,16 +127,21 @@ plt.close()
 df.reset_index(inplace =True)
 final = pd.merge(df,model, on = 'subj_id', how = 'left')
 
-
-
-
-
-
-
-
-
-
-
-
+final_modelb = final.loc[:,['class', u'thres1', u'thres2', u'thres3', u'thres4', u'thres5', u'thres6']].copy()
+final_modelb_groupby = pd.melt(final_modelb.groupby('class').apply(np.mean).reset_index(inplace=False),\
+ id_vars=['class'], value_vars=['thres1','thres2','thres3','thres4','thres5','thres6']).\
+pivot(index = 'variable', columns = 'class',values='value')
+final_modelb_groupby.index.name = 'Threshold'
+final_modelb_groupby.columns.name = None
+final_modelb_groupby.loc[:,'turns'] = [2, 5, 9, 13, 17, 20]
+	
+##plot on each figure the thresold of ModelB and reported
+for class_name in type_lst:
+	title = 'Comparison of Reported and Model B for the ' + class_name.upper() + ' group'
+	ax = df_class.plot('turns', class_name, ls ='-.', lw=3.0)
+	final_modelb_groupby.plot('turns', class_name, ax = ax, xlim = [1,20], ylim=[0,100], ls='-', lw = 3.0,title = title)
+	L=plt.legend()
+	L.get_texts()[0].set_text('Reported')
+	L.get_texts()[1].set_text('Model B')
 
 
