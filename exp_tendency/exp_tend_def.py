@@ -5,7 +5,8 @@
 2)get modelB threshold for each category:mean/median
 3)get the # of subjects best fitting for each type of model
 4)get the # of subjects besting fitting in each of the 4 category for each type of model
-6)compare the 4 reported threshold with other fitting modeled threshold, like the constant model?
+6)compare the 4 reported threshold with other fitting modeled threshold:try jumpturn model
+7)taking out jumpturn7 model, and add the name of the epsilon-greedy and successive_non_candidate model name into the table
 '''
 # find the tendency for each subj as the following policy:
 # If the reported thresholds at those 6 turns remained the same, participants were classified as Constant;
@@ -46,6 +47,14 @@ jump_7 = jump_7 + np.log(570)*3
 jump = pd.DataFrame(scipy.io.loadmat('jumpturn_two_thres_model_bounded_fitting_result.mat')['minLL'], columns = ['jump'])
 #jump has 4 paras
 jump = jump + np.log(570)*4
+##add parameter estimating values for the jumpturn model
+best_thresh1 = pd.DataFrame(scipy.io.loadmat('jumpturn_two_thres_model_bounded_fitting_result.mat')['best_thresh1'], columns = ['jump_best_thresh1'])
+best_thresh2 = pd.DataFrame(scipy.io.loadmat('jumpturn_two_thres_model_bounded_fitting_result.mat')['best_thresh2'], columns = ['jump_best_thresh2'])
+best_scale = pd.DataFrame(scipy.io.loadmat('jumpturn_two_thres_model_bounded_fitting_result.mat')['best_scale'], columns = ['jump_best_scale'])
+best_jumpturn = pd.DataFrame(scipy.io.loadmat('jumpturn_two_thres_model_bounded_fitting_result.mat')['best_jumpturn'], columns = ['jump_best_jumpturn'])
+jumpturn_modeling_res  = pd.concat((jump, best_thresh1, best_thresh2, best_scale, best_jumpturn), axis = 1)
+jump = jumpturn_modeling_res
+
 k_step = pd.DataFrame(scipy.io.loadmat('k_step_model_results.mat')['minLL'], columns = ['k_step'])
 #k_step has 2 paras
 k_step = k_step + np.log(570)*2
@@ -190,3 +199,54 @@ for each_class in final_model_class_gp:
 	print final_model_class_gp[each_class].set_index('class',inplace=False).apply(np.argmin, axis=1).value_counts()
 	file_name = each_class+'.csv'
 	final_model_class_gp[each_class].set_index('class',inplace=False).apply(np.argmin, axis=1).value_counts().to_csv(file_name,index=True)
+
+
+
+#^^^^^^^6)compare the 4 reported threshold with other fitting modeled threshold:try jumpturn model
+
+final_jump = final.loc[:,['class', 'jump_best_thresh1', 'jump_best_thresh2', 'jump_best_scale', 'jump_best_jumpturn']].copy()
+final_jump_groupby = pd.melt(final_jump.groupby('class').apply(np.mean).reset_index(inplace=False),\
+ id_vars=['class'], value_vars=['jump_best_thresh1','jump_best_thresh2','jump_best_scale']).\
+pivot(index = 'variable', columns = 'class',values='value')
+final_jump_groupby.columns.name = None
+final_jump_groupby_median = pd.melt(final_jump.groupby('class').agg(np.median).reset_index(inplace=False),\
+ id_vars=['class'], value_vars=['jump_best_jumpturn']).\
+pivot(index = 'variable', columns = 'class',values='value')
+final_jump_groupby_median.columns.name = None
+final_jump_groupby = pd.concat((final_jump_groupby, final_jump_groupby_median),axis = 0)
+	
+##plot on each figure the thresold of ModelB and reported
+for class_name in type_lst:
+	title = 'Comparison of Reported and JumpTurn Model for the ' + class_name.upper() + ' group'
+	#first plot the reported threshold
+	#open a new figure every time for the same class: it will add all the information into the same graph
+	plt.figure()
+	reported_thres, = plt.plot(df_class.loc[:,'turns'], df_class.loc[:, class_name], ls ='-.', lw=3.0, color = 'b', label = 'Reported Threshold')
+	#second plot the modeling result
+	tmp_turns0 = range(2, int(final_jump_groupby.loc['jump_best_jumpturn', class_name]+1))
+	tmp_thres0 = final_jump_groupby.loc['jump_best_thresh1', class_name]
+	line_jumpturn, = plt.plot(tmp_turns0, len(tmp_turns0)*[tmp_thres0], color = 'g', ls='-', lw = 3.0, label = 'JumpTurn Model')
+	plt.legend(handles = [reported_thres, line_jumpturn])
+	tmp_turns = range(int(final_jump_groupby.loc['jump_best_jumpturn', class_name]+1), 21)
+	tmp_thres = final_jump_groupby.loc['jump_best_thresh2', class_name]
+	plt.plot(tmp_turns, len(tmp_turns)*[tmp_thres], color = 'g', ls='-', lw = 3.0)
+	#add connecting line to jumpturn_thres1 and jumpturn_thres2
+	plt.plot([tmp_turns0[-1], tmp_turns[0]],[tmp_thres0, tmp_thres], color='g', ls = '--', lw =3.0)
+	plt.axis([1,20, 0,100])
+	plt.title(title)
+	plt.xlabel('Turn')
+	plt.ylabel('Card Value')
+	
+plt.close()
+plt.close()
+plt.close()
+plt.close()
+
+
+#7)taking out jumpturn7 model, and add the name of the epsilon-greedy and successive_non_candidate model name into the table
+
+
+
+
+
+
