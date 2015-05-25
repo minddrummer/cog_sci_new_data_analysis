@@ -244,9 +244,30 @@ plt.close()
 
 
 #7)taking out jumpturn7 model, and add the name of the epsilon-greedy and successive_non_candidate model name into the table
+#``````7sub_3)get the # of subjects best fitting for each type of model
+final_model = final.loc[:,['subj_id', 'modelB', \
+u'epi_greedy', u'fix', u'jump', u'k_step', u'random_k', u'secretary', u'successive']].copy()
+final_model.set_index('subj_id', inplace = True)
+final_model.loc[:,'best_model_no_j7'] = final_model.apply(np.argmin, axis = 1)
+final_model.loc[:,'best_BIC_no_j7'] = final_model.apply(np.min, axis = 1)
+print final_model.loc[:,'best_model_no_j7'].value_counts()
+final_model.loc[:,'best_model_no_j7'].value_counts().to_csv('total_best_model_each_subj.csv')
 
 
 
 
+#```````7sub_4)get the # of subjects besting fitting in each of the 4 category for each type of model
+###----the difference between final_model and final_model_class is that the later has 'class' for grouping and analyzing on each group level
+final_model_class = final.loc[:,['subj_id', 'class', 'modelB', \
+u'epi_greedy', u'fix', u'jump', u'k_step', u'random_k', u'secretary', u'successive']].copy()
+final_model_class.set_index('subj_id', inplace = True)
+final_model_class_gp = dict(list(final_model_class.groupby('class')))
+
+for each_class in final_model_class_gp:
+	print each_class.upper()
+	print final_model_class_gp[each_class].set_index('class',inplace=False).apply(np.argmin, axis=1).value_counts()
+	file_name = each_class+'.csv'
+	#the current existing file should include all the models even there is 0 best fit, so comment the next line below
+	#final_model_class_gp[each_class].set_index('class',inplace=False).apply(np.argmin, axis=1).value_counts().to_csv(file_name,index=True)
 
 
