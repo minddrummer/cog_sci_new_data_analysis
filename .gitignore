@@ -3,3 +3,4 @@
 *.tsv
 *.json
 ./RT_analysis/*.mat
+*.pdf
