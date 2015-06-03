@@ -66,7 +66,9 @@ result = model.fit()
 print result.summary()
 
 
-#  OLS Regression Results
+#  OLS Regression Results--whether the model is significant or not(the p value)
+# --is the result in terms of the coefficient of the x1, not refering to the const--
+#
 # ==============================================================================
 # Dep. Variable:                      y   R-squared:                       0.003
 # Model:                            OLS   Adj. R-squared:                  0.003
