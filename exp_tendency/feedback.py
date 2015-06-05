@@ -21,7 +21,8 @@ import matplotlib.pyplot as plt
 import scipy as sp
 import scipy.io 
 import statsmodels.api as sm
-
+from statsmodels.formula.api import ols
+from statsmodels.stats.weightstats import ttest_ind as ttest
 
 
 pop = scipy.io.loadmat('population.mat')
@@ -100,7 +101,81 @@ tmp_other = data.loc[~(data.trial == 1), :].copy()
 tmp_other.loc[:, 'outperform'] = tmp_outperform.values
 
 
+df = tmp_other.copy()
+#we are checking score #explore #switch FCEturn of the 1st trial after either outperform or not in the last trial
+#the assumption is that if there is an effect of ourperforming feedback on the following trials, there should be 
+#at least an immediate effect on the 1st trial after this trial.
+
+df.groupby('outperform').agg('mean')
+#there is a difference between the 4 variables; but the key thing is that there is a confound: the trial
+#with the trial increase, the performance is becoming better, and also with more outperform True
+#so we first run a linear regression on the trials and the four variables, and after that, we do compare outperform conditions
+
+# def remove_trial_linear_effect(dep_var, trial):
+# 	X = sm.add_constant(trial)
+# 	y = dep_var
+# 	model = sm.OLS(y, X)
+# 	result = model.fit()
+# 	resid = result.resid
+# 	return resid
+
+# df.loc[:, 'totalpoint'] = remove_trial_linear_effect(df.totalpoint, df.trial)
+# df.loc[:, 'num_switch'] = remove_trial_linear_effect(df.num_switch, df.trial)
+# df.loc[:, 'num_explore'] = remove_trial_linear_effect(df.num_explore, df.trial)
+# df.loc[:, 'first_con_exploit_turn'] = remove_trial_linear_effect(df.first_con_exploit_turn, df.trial)
+
+# #do show the means again:
+# df.groupby('outperform').agg('mean')
+
+
+# #ANOVA
+# #totalpoint
+# model = ols('totalpoint ~ C(outperform, Sum)', data=df).fit()
+# # Type 2 when no interaction; typ 3 when interaction; type1 doesNOT control for the other vairiables when fitting 
+# table = sm.stats.anova_lm(model, typ=2) 
+# print table
+# #t-test--the same thing as above using ANOVA
+# # a = df.loc[df.outperform == True , 'totalpoint']
+# # b = df.loc[df.outperform == False , 'totalpoint']
+# # tstat, pvalue, df = ttest(a, b)
+# #``````num_switch
+# model = ols('num_switch ~ C(outperform, Sum)', data=df).fit()
+# table = sm.stats.anova_lm(model, typ=2) 
+# print table
+# #`````num_explore
+# model = ols('num_explore ~ C(outperform, Sum)', data=df).fit()
+# table = sm.stats.anova_lm(model, typ=2) 
+# print table
+# #`````first_con_exploit_turn
+# model = ols('first_con_exploit_turn ~ C(outperform, Sum)', data=df).fit()
+# table = sm.stats.anova_lm(model, typ=2) 
+# print table
 
 
 
 
+#ANOVA
+#totalpoint
+model = ols('totalpoint ~ trial*C(outperform, Treatment)', data=df).fit()
+# Type 2 when no interaction; typ 3 when interaction; type1 doesNOT control for the other vairiables when fitting 
+# table = sm.stats.anova_lm(model, typ=2) 
+print model.summary()
+#t-test--the same thing as above using ANOVA
+# a = df.loc[df.outperform == True , 'totalpoint']
+# b = df.loc[df.outperform == False , 'totalpoint']
+# tstat, pvalue, df = ttest(a, b)
+#``````num_switch
+model = ols('num_switch ~ trial*C(outperform, Treatment)', data=df).fit()
+# Type 2 when no interaction; typ 3 when interaction; type1 doesNOT control for the other vairiables when fitting 
+# table = sm.stats.anova_lm(model, typ=2) 
+print model.summary()
+#`````num_explore
+model = ols('num_explore ~ trial*C(outperform, Treatment)', data=df).fit()
+# Type 2 when no interaction; typ 3 when interaction; type1 doesNOT control for the other vairiables when fitting 
+# table = sm.stats.anova_lm(model, typ=2) 
+print model.summary()
+#`````first_con_exploit_turn
+model = ols('first_con_exploit_turn ~ trial*C(outperform, Treatment)', data=df).fit()
+# Type 2 when no interaction; typ 3 when interaction; type1 doesNOT control for the other vairiables when fitting 
+# table = sm.stats.anova_lm(model, typ=2) 
+print model.summary()
